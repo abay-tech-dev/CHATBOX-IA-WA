@@ -776,6 +776,53 @@
         </div>
       </div>
 
+      <!-- Objectif d'abonnements -->
+      <div class="section">
+        <div class="section-title">Objectif d'abonnements</div>
+
+        <div class="toggle-row" style="border-bottom:none">
+          <span class="toggle-name">Activer l'objectif</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="opt-subgoal" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div id="subgoal-settings" style="display:none;margin-top:10px;">
+          <div class="ctrl-row">
+            <label class="ctrl-label" for="ctrl-goal-label">Titre</label>
+            <input class="ctrl-input" id="ctrl-goal-label" type="text" value="Objectif abonnements" />
+          </div>
+          <div class="ctrl-row">
+            <label class="ctrl-label" for="ctrl-goal-desc">Description (ex : Facecam à 100 subs !)</label>
+            <input class="ctrl-input" id="ctrl-goal-desc" type="text" placeholder="Laisser vide pour masquer" />
+          </div>
+          <div class="ctrl-row">
+            <label class="ctrl-label">Objectif cible</label>
+            <div class="range-wrap">
+              <input class="ctrl-range" id="ctrl-goal-target" type="range" min="10" max="500" step="10" value="100" />
+              <span class="range-val" id="val-goal-target">100</span>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <label class="ctrl-label">
+              Progression actuelle :
+              <span id="val-goal-current" style="color:var(--accent);font-weight:700">0</span>
+              /
+              <span id="val-goal-target-inline">100</span>
+            </label>
+            <div style="display:flex;gap:5px;margin-top:5px">
+              <button class="test-btn" style="flex:1;margin:0;justify-content:center" onclick="simSub(1)">+1 Sub</button>
+              <button class="test-btn" style="flex:1;margin:0;justify-content:center" onclick="simSub(5)">+5 Subs</button>
+              <button class="test-btn" style="flex:1;margin:0;justify-content:center" onclick="simGiftSub(3)">🎁 ×3</button>
+            </div>
+          </div>
+          <button class="test-btn" style="width:100%;justify-content:center;margin-top:4px;color:#FF4757;border-color:#FF475722" onclick="resetGoal()">
+            ↺ Réinitialiser
+          </button>
+        </div>
+      </div>
+
       <!-- Messages test -->
       <div class="section">
         <div class="section-title">Messages test</div>
@@ -787,7 +834,7 @@
           ⚔️ Modérateur
           <span class="btn-badge badge-mod">MOD</span>
         </button>
-        <button class="test-btn" onclick="sendTest('sub')">
+        <button class="test-btn" onclick="sendTestSub()">
           ⭐ Abonné
           <span class="btn-badge badge-sub">SUB</span>
         </button>
@@ -951,6 +998,12 @@ function syncAllConfig() {
   w.CONFIG.showInputBar    = document.getElementById('opt-inputbar').checked;
   w.CONFIG.showBadges      = document.getElementById('opt-badges').checked;
   w.CONFIG.showTimestamp   = document.getElementById('opt-timestamp').checked;
+  // Sub goal
+  w.CONFIG.subGoalEnabled  = document.getElementById('opt-subgoal').checked;
+  w.CONFIG.subGoalCurrent  = goalCurrent;
+  w.CONFIG.subGoalTarget   = goalTarget;
+  w.CONFIG.subGoalLabel    = document.getElementById('ctrl-goal-label').value;
+  w.CONFIG.subGoalDesc     = document.getElementById('ctrl-goal-desc').value;
   if (typeof w.applyConfig === 'function') w.applyConfig();
 }
 
@@ -1003,6 +1056,68 @@ bindRange('ctrl-duration', 'val-duration', 'messageDuration', v => v === 0 ? '�
   });
 });
 
+// ── Sub Goal controls ────────────────────────────────
+
+let goalCurrent = 0;
+let goalTarget  = 100;
+
+document.getElementById('opt-subgoal').addEventListener('change', (e) => {
+  const enabled = e.target.checked;
+  document.getElementById('subgoal-settings').style.display = enabled ? '' : 'none';
+  syncConfig('subGoalEnabled', enabled);
+});
+
+document.getElementById('ctrl-goal-label').addEventListener('input', (e) => {
+  syncConfig('subGoalLabel', e.target.value || 'Objectif abonnements');
+});
+
+document.getElementById('ctrl-goal-desc').addEventListener('input', (e) => {
+  syncConfig('subGoalDesc', e.target.value);
+});
+
+document.getElementById('ctrl-goal-target').addEventListener('input', (e) => {
+  goalTarget = parseInt(e.target.value);
+  document.getElementById('val-goal-target').textContent      = goalTarget;
+  document.getElementById('val-goal-target-inline').textContent = goalTarget;
+  syncConfig('subGoalTarget', goalTarget);
+});
+
+function updateGoalDisplay() {
+  document.getElementById('val-goal-current').textContent = goalCurrent;
+}
+
+function simSub(amount) {
+  const w = win();
+  if (!w) { showToast('Widget pas encore chargé…'); return; }
+  goalCurrent = Math.min(goalCurrent + amount, goalTarget);
+  updateGoalDisplay();
+  if (typeof w.updateSubGoal === 'function') {
+    const names = ['StreamFan42','CasualViewer','NightWatcher','TwitchUser','SubLoyalty'];
+    w.updateSubGoal(names[Math.floor(Math.random() * names.length)], amount, 'sub');
+  }
+}
+
+function simGiftSub(amount) {
+  const w = win();
+  if (!w) { showToast('Widget pas encore chargé…'); return; }
+  goalCurrent = Math.min(goalCurrent + amount, goalTarget);
+  updateGoalDisplay();
+  if (typeof w.updateSubGoal === 'function') {
+    const gifters = ['GiftKing','SubAngel','GenerousViewer'];
+    w.updateSubGoal(gifters[Math.floor(Math.random() * gifters.length)], amount, 'giftsub');
+  }
+}
+
+function resetGoal() {
+  goalCurrent = 0;
+  updateGoalDisplay();
+  const w = win();
+  if (w && w.CONFIG) {
+    w.CONFIG.subGoalCurrent = 0;
+    if (typeof w.applySubGoal === 'function') w.applySubGoal();
+  }
+}
+
 // ── Test messages ────────────────────────────────────
 
 const TEST_POOL = {
@@ -1031,6 +1146,11 @@ const TEST_POOL = {
       badges: [], color: '#FF9A3C' },
   ],
 };
+
+function sendTestSub() {
+  sendTest('sub');
+  simSub(1);
+}
 
 function sendTest(type) {
   const w = win();

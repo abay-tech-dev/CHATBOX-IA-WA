@@ -13,6 +13,12 @@ const CONFIG = {
   showInputBar:    true,
   showBadges:      true,
   showTimestamp:   true,
+  // Sub goal
+  subGoalEnabled:  false,
+  subGoalCurrent:  0,
+  subGoalTarget:   100,
+  subGoalLabel:    'Objectif abonnements',
+  subGoalDesc:     '',
 };
 
 const BADGE_META = {
@@ -44,7 +50,20 @@ window.addEventListener('onWidgetLoad', ({ detail }) => {
 
 window.addEventListener('onEventReceived', ({ detail }) => {
   if (!detail?.listener || !detail?.event) return;
-  if (detail.listener === 'message') addMessage(detail.event.data);
+  const { listener, event } = detail;
+
+  if (listener === 'message') {
+    addMessage(event.data);
+  } else if (listener === 'subscriber-latest') {
+    const { name, amount = 1, type = 'sub', gifted, sender, isCommunityGift } = event;
+    if (gifted || isCommunityGift) {
+      updateSubGoal(sender || name, +amount, 'giftsub');
+    } else if (type === 'resub') {
+      updateSubGoal(name, 1, 'resub');
+    } else {
+      updateSubGoal(name, 1, 'sub');
+    }
+  }
 });
 
 // ── Configuration ───────────────────────────────────
@@ -60,6 +79,12 @@ function applyFields(f) {
   if (f.showInputBar    !== undefined) CONFIG.showInputBar     = !!f.showInputBar;
   if (f.showBadges      !== undefined) CONFIG.showBadges       = !!f.showBadges;
   if (f.showTimestamp   !== undefined) CONFIG.showTimestamp    = !!f.showTimestamp;
+  // Sub goal
+  if (f.subGoalEnabled  !== undefined) CONFIG.subGoalEnabled  = !!f.subGoalEnabled;
+  if (f.subGoalCurrent  !== undefined) CONFIG.subGoalCurrent  = +f.subGoalCurrent;
+  if (f.subGoalTarget   !== undefined) CONFIG.subGoalTarget   = +f.subGoalTarget;
+  if (f.subGoalLabel    !== undefined) CONFIG.subGoalLabel    = f.subGoalLabel;
+  if (f.subGoalDesc     !== undefined) CONFIG.subGoalDesc     = f.subGoalDesc;
 }
 
 function applyConfig() {
@@ -81,6 +106,8 @@ function applyConfig() {
   const inputBar = document.getElementById('wa-input-bar');
   if (header)   header.style.display   = CONFIG.showHeader   ? '' : 'none';
   if (inputBar) inputBar.style.display = CONFIG.showInputBar ? '' : 'none';
+
+  applySubGoal();
 }
 
 // ── Utilitaires ─────────────────────────────────────
@@ -203,6 +230,106 @@ function pruneMessages() {
   const visible = [...list.querySelectorAll('.message-wrapper:not(.removing)')];
   const excess  = visible.length - CONFIG.maxMessages;
   for (let i = 0; i < excess; i++) visible[i].remove(); // silencieux (au-dessus du cadre)
+}
+
+// ── Objectif d'abonnements ──────────────────────────
+
+function applySubGoal() {
+  const el = document.getElementById('sub-goal');
+  if (!el) return;
+
+  if (!CONFIG.subGoalEnabled) {
+    el.classList.remove('goal-visible');
+    return;
+  }
+
+  el.classList.add('goal-visible');
+
+  const pct = CONFIG.subGoalTarget > 0
+    ? Math.min(100, (CONFIG.subGoalCurrent / CONFIG.subGoalTarget) * 100)
+    : 0;
+  const complete = CONFIG.subGoalCurrent >= CONFIG.subGoalTarget;
+
+  document.getElementById('goal-label').textContent    = CONFIG.subGoalLabel || 'Objectif abonnements';
+  document.getElementById('goal-fraction').textContent = `${CONFIG.subGoalCurrent} / ${CONFIG.subGoalTarget}`;
+  document.getElementById('goal-fill').style.width     = `${pct}%`;
+
+  const descEl = document.getElementById('goal-desc');
+  descEl.textContent = CONFIG.subGoalDesc || '';
+  descEl.style.display = CONFIG.subGoalDesc ? '' : 'none';
+
+  el.classList.toggle('goal-complete', complete);
+}
+
+function updateSubGoal(username, amount = 1, type = 'sub') {
+  if (!CONFIG.subGoalEnabled) return;
+
+  const wasComplete = CONFIG.subGoalCurrent >= CONFIG.subGoalTarget;
+  CONFIG.subGoalCurrent = Math.min(CONFIG.subGoalCurrent + amount, CONFIG.subGoalTarget);
+
+  // Animation de pulse
+  const el = document.getElementById('sub-goal');
+  if (el) {
+    el.classList.remove('sub-pulse');
+    void el.offsetWidth;
+    el.classList.add('sub-pulse');
+    setTimeout(() => el.classList.remove('sub-pulse'), 500);
+  }
+
+  applySubGoal();
+
+  // Message système dans le chat
+  let chip;
+  if (type === 'giftsub') {
+    chip = amount > 1
+      ? `🎁 ${escHtml(username)} offre ${amount} abonnements !`
+      : `🎁 ${escHtml(username)} offre un abonnement !`;
+  } else if (type === 'resub') {
+    chip = `⭐ ${escHtml(username)} se réabonne !`;
+  } else {
+    chip = `⭐ ${escHtml(username)} vient de s'abonner !`;
+  }
+  addSystemMessage(chip);
+
+  // Objectif atteint
+  const nowComplete = CONFIG.subGoalCurrent >= CONFIG.subGoalTarget;
+  if (!wasComplete && nowComplete) {
+    setTimeout(() => {
+      addSystemMessage(`🎉 Objectif atteint ! ${CONFIG.subGoalTarget} abonnements !`);
+      spawnConfetti();
+    }, 700);
+  }
+}
+
+function addSystemMessage(text) {
+  const list = document.getElementById('messages-list');
+  if (!list) return;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'message-wrapper system-msg';
+  wrapper.innerHTML = `<div class="system-chip">${text}</div>`;
+  list.appendChild(wrapper);
+  pruneMessages();
+}
+
+function spawnConfetti() {
+  const container = document.getElementById('messages-container');
+  if (!container) return;
+  const colors = ['#25D366','#00A884','#FFD700','#FF6B6B','#4D96FF','#C77DFF','#FF9A3C'];
+  for (let i = 0; i < 14; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `
+        left:${15 + Math.random() * 70}%;
+        bottom:10px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        animation-delay:${Math.random() * .25}s;
+        animation-duration:${.65 + Math.random() * .45}s;
+      `;
+      container.appendChild(c);
+      c.addEventListener('animationend', () => c.remove(), { once: true });
+    }, i * 55);
+  }
 }
 
 // ── Mode test (hors StreamElements) ─────────────────

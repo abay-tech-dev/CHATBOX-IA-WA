@@ -61,5 +61,30 @@
     "type": "checkbox",
     "label": "Afficher l'heure sur chaque message",
     "value": true
+  },
+  "subGoalEnabled": {
+    "type": "checkbox",
+    "label": "Activer l'objectif d'abonnements",
+    "value": false
+  },
+  "subGoalLabel": {
+    "type": "text",
+    "label": "Titre de l'objectif",
+    "value": "Objectif abonnements"
+  },
+  "subGoalDesc": {
+    "type": "text",
+    "label": "Description (ex: Facecam à 100 subs !)",
+    "value": ""
+  },
+  "subGoalCurrent": {
+    "type": "number",
+    "label": "Abonnements actuels",
+    "value": 0
+  },
+  "subGoalTarget": {
+    "type": "number",
+    "label": "Objectif cible (nombre de subs)",
+    "value": 100
   }
 }

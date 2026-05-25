@@ -378,6 +378,173 @@ html, body {
 
 .wa-mic-btn svg { width: 24px; height: 24px; }
 
+/* =====================================================
+   OBJECTIF D'ABONNEMENTS
+   ===================================================== */
+#sub-goal {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: var(--wa-header-bg);
+  border-bottom: 1px solid var(--wa-divider);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .35s cubic-bezier(.4,0,.2,1);
+}
+
+#sub-goal.goal-visible {
+  max-height: 76px;
+}
+
+.goal-accent {
+  width: 4px;
+  background: var(--wa-green);
+  flex-shrink: 0;
+  transition: background .5s;
+}
+
+#sub-goal.goal-complete .goal-accent {
+  background: #FFD700;
+}
+
+.goal-body {
+  flex: 1;
+  padding: 8px 12px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.goal-top-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.goal-icon { font-size: 12px; flex-shrink: 0; }
+
+.goal-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--wa-green);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color .5s;
+}
+
+#sub-goal.goal-complete .goal-label { color: #FFD700; }
+
+.goal-fraction {
+  font-size: 11px;
+  color: var(--wa-text-secondary);
+  font-weight: 600;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-desc {
+  font-size: 11px;
+  color: var(--wa-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+}
+
+/* ── Barre de progression ── */
+.goal-track {
+  height: 5px;
+  background: var(--wa-divider);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.goal-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--wa-green-bright), #6BCB77);
+  border-radius: 3px;
+  transition: width .9s cubic-bezier(.34,1.2,.64,1);
+}
+
+/* Reflet animé sur la barre */
+.goal-shine {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  animation: goalShine 2.8s ease-in-out infinite;
+}
+
+@keyframes goalShine {
+  0%        { left: -60%; }
+  50%, 100% { left: 130%; }
+}
+
+/* Objectif atteint – barre dorée */
+#sub-goal.goal-complete .goal-fill {
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  background-size: 200%;
+  animation: goldShimmer 1.8s linear infinite;
+  transition: none;
+}
+
+@keyframes goldShimmer {
+  0%   { background-position: 200%; }
+  100% { background-position: -200%; }
+}
+
+/* Pulse quand un sub arrive */
+@keyframes subFlash {
+  0%,100% { filter: brightness(1); }
+  40%     { filter: brightness(1.6) saturate(1.4); }
+}
+
+#sub-goal.sub-pulse { animation: subFlash .45s ease; }
+
+/* ── Messages système (date-separator WhatsApp) ── */
+.message-wrapper.system-msg { align-items: center; }
+
+.system-chip {
+  background: rgba(0,0,0,.32);
+  color: var(--wa-text-secondary);
+  font-size: 11.5px;
+  padding: 4px 14px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,.07);
+  max-width: 90%;
+  line-height: 1.4;
+}
+
+.theme-light .system-chip {
+  background: rgba(0,0,0,.1);
+  border-color: rgba(0,0,0,.08);
+  color: var(--wa-text-secondary);
+}
+
+/* ── Confettis ── */
+@keyframes confettiFall {
+  0%   { transform: translateY(-10px) rotate(0deg) scale(1);   opacity: 1; }
+  100% { transform: translateY(70px)  rotate(420deg) scale(.5); opacity: 0; }
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: confettiFall .85s ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* ── Scrollbar discrète si nécessaire ── */
 ::-webkit-scrollbar          { width: 3px; }
 ::-webkit-scrollbar-track    { background: transparent; }
