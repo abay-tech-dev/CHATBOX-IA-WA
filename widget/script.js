@@ -4,7 +4,7 @@
 
 const CONFIG = {
   maxMessages:     15,
-  messageDuration: 0,       // 0 = permanent
+  messageDuration: 0,
   theme:           'dark',
   streamName:      'Tchat Stream',
   avatarUrl:       '',
@@ -13,6 +13,8 @@ const CONFIG = {
   showInputBar:    true,
   showBadges:      true,
   showTimestamp:   true,
+  // Connexion Twitch directe
+  twitchChannel:   '',
   // Sub goal
   subGoalEnabled:  false,
   subGoalCurrent:  0,
@@ -80,6 +82,7 @@ function applyFields(f) {
   if (f.showBadges      !== undefined) CONFIG.showBadges       = !!f.showBadges;
   if (f.showTimestamp   !== undefined) CONFIG.showTimestamp    = !!f.showTimestamp;
   // Sub goal
+  if (f.twitchChannel   !== undefined) CONFIG.twitchChannel   = f.twitchChannel;
   if (f.subGoalEnabled  !== undefined) CONFIG.subGoalEnabled  = !!f.subGoalEnabled;
   if (f.subGoalCurrent  !== undefined) CONFIG.subGoalCurrent  = +f.subGoalCurrent;
   if (f.subGoalTarget   !== undefined) CONFIG.subGoalTarget   = +f.subGoalTarget;
@@ -108,6 +111,11 @@ function applyConfig() {
   if (inputBar) inputBar.style.display = CONFIG.showInputBar ? '' : 'none';
 
   applySubGoal();
+
+  // Connexion IRC directe (désactivée si StreamElements gère les events)
+  if (!IS_SE && CONFIG.twitchChannel) {
+    connectTwitch(CONFIG.twitchChannel);
+  }
 }
 
 // ── Utilitaires ─────────────────────────────────────
@@ -230,6 +238,154 @@ function pruneMessages() {
   const visible = [...list.querySelectorAll('.message-wrapper:not(.removing)')];
   const excess  = visible.length - CONFIG.maxMessages;
   for (let i = 0; i < excess; i++) visible[i].remove(); // silencieux (au-dessus du cadre)
+}
+
+// ── Connexion Twitch IRC (WebSocket anonyme) ─────────
+
+let twitchWS            = null;
+let twitchReconnectTimer = null;
+let twitchReconnectDelay = 1500;
+let twitchActiveChannel  = '';
+
+function connectTwitch(channel) {
+  const ch = channel.toLowerCase().replace(/^#/, '').trim();
+  if (!ch) return;
+
+  // Déjà connecté à ce channel
+  if (ch === twitchActiveChannel && twitchWS?.readyState === WebSocket.OPEN) return;
+
+  disconnectTwitch();
+  twitchActiveChannel = ch;
+  setConnectionStatus('connecting');
+
+  const ws = new WebSocket('wss://irc-ws.chat.twitch.tv/');
+  twitchWS = ws;
+
+  ws.onopen = () => {
+    ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    ws.send('PASS oauth:anonymous');
+    ws.send(`NICK justinfan${Math.floor(Math.random() * 80000) + 10000}`);
+    ws.send(`JOIN #${ch}`);
+  };
+
+  ws.onmessage = ({ data }) => {
+    data.split('\r\n').forEach(line => { if (line) handleIRCLine(line, ch); });
+  };
+
+  ws.onerror = () => setConnectionStatus('error');
+
+  ws.onclose = () => {
+    if (twitchActiveChannel !== ch) return; // connexion volontairement changée
+    setConnectionStatus('disconnected');
+    twitchReconnectDelay = Math.min(twitchReconnectDelay * 2, 30000);
+    twitchReconnectTimer = setTimeout(() => connectTwitch(ch), twitchReconnectDelay);
+  };
+}
+
+function disconnectTwitch() {
+  clearTimeout(twitchReconnectTimer);
+  twitchActiveChannel = '';
+  if (twitchWS) {
+    twitchWS.onclose = null;
+    twitchWS.close();
+    twitchWS = null;
+  }
+  setConnectionStatus('disconnected');
+}
+
+function handleIRCLine(line, ch) {
+  if (line.startsWith('PING')) {
+    twitchWS?.send('PONG :tmi.twitch.tv');
+    return;
+  }
+
+  // JOIN confirmé → connexion établie
+  if (line.includes(`JOIN #${ch}`)) {
+    twitchReconnectDelay = 1500;
+    setConnectionStatus('connected');
+    return;
+  }
+
+  // Regex générique : @tags :user!... COMMAND #channel :text
+  const m = line.match(/^(?:@([^ ]+) )?:([^!]+)![^ ]+ ([A-Z]+) #\S+(?: :(.*))?$/);
+  if (!m) return;
+
+  const [, tagsStr = '', username, command, text = ''] = m;
+  const tags = parseTags(tagsStr);
+
+  if (command === 'PRIVMSG') {
+    addMessage({
+      displayName: tags['display-name'] || username,
+      username,
+      text,
+      color:   tags['color'] || null,
+      badges:  parseBadges(tags['badges']  || ''),
+      emotes:  parseEmotes(tags['emotes']  || '', text),
+    });
+  } else if (command === 'USERNOTICE') {
+    handleUserNotice(tags);
+  }
+}
+
+function parseTags(str) {
+  const t = {};
+  str.split(';').forEach(p => {
+    const i = p.indexOf('=');
+    if (i !== -1) t[p.slice(0, i)] = p.slice(i + 1);
+  });
+  return t;
+}
+
+function parseBadges(str) {
+  return str.split(',').filter(Boolean).map(b => ({ type: b.split('/')[0] }));
+}
+
+function parseEmotes(str, text) {
+  if (!str) return [];
+  const list = [];
+  str.split('/').forEach(part => {
+    if (!part) return;
+    const [id, positions] = part.split(':');
+    (positions || '').split(',').forEach(pos => {
+      const [start, end] = pos.split('-').map(Number);
+      if (!isNaN(start) && !isNaN(end)) {
+        list.push({
+          id, start, end,
+          urls: {
+            '1':  `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0`,
+            '1x': `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0`,
+          },
+        });
+      }
+    });
+  });
+  return list;
+}
+
+function handleUserNotice(tags) {
+  const msgId = tags['msg-id'] || '';
+  const user  = tags['display-name'] || tags['login'] || 'Anonyme';
+  if (msgId === 'sub')              updateSubGoal(user, 1, 'sub');
+  else if (msgId === 'resub')       updateSubGoal(user, 1, 'resub');
+  else if (msgId === 'subgift' || msgId === 'anonsubgift') updateSubGoal(user, 1, 'giftsub');
+  else if (msgId === 'submysterygift') {
+    updateSubGoal(user, parseInt(tags['msg-param-mass-gift-count'] || '1'), 'giftsub');
+  }
+}
+
+function setConnectionStatus(status) {
+  const dot = document.getElementById('connection-dot');
+  if (dot) {
+    dot.className  = `wa-online-dot conn-${status}`;
+    dot.title = {
+      connected:    `Connecté à #${twitchActiveChannel}`,
+      connecting:   'Connexion en cours…',
+      disconnected: 'Non connecté',
+      error:        'Erreur de connexion',
+    }[status] ?? '';
+  }
+  // Notifie le viewer parent (même origine)
+  try { window.parent.postMessage({ type: 'twitchStatus', status, channel: twitchActiveChannel }, '*'); } catch (_) {}
 }
 
 // ── Objectif d'abonnements ──────────────────────────

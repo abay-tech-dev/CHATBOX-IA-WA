@@ -1,4 +1,9 @@
 {
+  "twitchChannel": {
+    "type": "text",
+    "label": "Canal Twitch (connexion directe, laisser vide si StreamElements)",
+    "value": ""
+  },
   "streamName": {
     "type": "text",
     "label": "Nom affiché dans l'en-tête",

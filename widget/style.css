@@ -123,9 +123,21 @@ html, body {
   right: 1px;
   width: 11px;
   height: 11px;
-  background: var(--wa-online);
+  background: #8696A0;
   border-radius: 50%;
   border: 2px solid var(--wa-header-bg);
+  transition: background .4s;
+}
+
+/* États de connexion Twitch */
+.wa-online-dot.conn-connected    { background: var(--wa-online); }
+.wa-online-dot.conn-connecting   { background: #FFD700; animation: connPulse 1.1s ease-in-out infinite; }
+.wa-online-dot.conn-error        { background: #FF4757; animation: connPulse 1.1s ease-in-out infinite; }
+.wa-online-dot.conn-disconnected { background: #8696A0; animation: none; }
+
+@keyframes connPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
 }
 
 /* Infos contact */
