@@ -783,12 +783,12 @@
         <div class="toggle-row" style="border-bottom:none">
           <span class="toggle-name">Activer l'objectif</span>
           <label class="toggle-switch">
-            <input type="checkbox" id="opt-subgoal" />
+            <input type="checkbox" id="opt-subgoal" checked />
             <span class="toggle-track"></span>
           </label>
         </div>
 
-        <div id="subgoal-settings" style="display:none;margin-top:10px;">
+        <div id="subgoal-settings" style="margin-top:10px;">
           <div class="ctrl-row">
             <label class="ctrl-label" for="ctrl-goal-label">Titre</label>
             <input class="ctrl-input" id="ctrl-goal-label" type="text" value="Objectif abonnements" />
@@ -1005,6 +1005,7 @@ function syncAllConfig() {
   w.CONFIG.subGoalLabel    = document.getElementById('ctrl-goal-label').value;
   w.CONFIG.subGoalDesc     = document.getElementById('ctrl-goal-desc').value;
   if (typeof w.applyConfig === 'function') w.applyConfig();
+  if (typeof w.applySubGoal === 'function') w.applySubGoal();
 }
 
 // ── Stream name ──────────────────────────────────────

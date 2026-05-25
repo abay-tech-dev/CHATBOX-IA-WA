@@ -337,6 +337,21 @@ function spawnConfetti() {
 const IS_SE = typeof window.StreamElements !== 'undefined'
            || window.location.href.includes('streamelements.com');
 
+// Toujours initialiser la config au chargement du DOM
+// (onWidgetLoad refait applyConfig() avec les vraies valeurs en mode SE)
+document.addEventListener('DOMContentLoaded', () => {
+  // En accès direct (pas dans un iframe viewer, pas dans SE) :
+  // on précharge des valeurs de démo pour que le sub goal soit visible
+  const IS_IFRAME = window !== window.top;
+  if (!IS_SE && !IS_IFRAME) {
+    CONFIG.subGoalEnabled = true;
+    CONFIG.subGoalCurrent = 45;
+    CONFIG.subGoalTarget  = 100;
+    CONFIG.subGoalDesc    = 'Facecam à 100 subs !';
+  }
+  applyConfig();
+});
+
 if (!IS_SE) {
   const SAMPLES = [
     { displayName: 'StreamFan42',   username: 'streamfan42',   text: 'Salut tout le monde ! 🎮',                     badges: [{ type: 'subscriber' }],                          color: '#FF6B6B' },
