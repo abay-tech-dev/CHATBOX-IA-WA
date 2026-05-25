@@ -3,72 +3,1132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHATBOX-IA — WhatsApp Widget</title>
-  <link rel="stylesheet" href="style.css">
+  <title>CHATBOX-IA WA · Viewer</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #07080D;
+      --panel:       #0F1117;
+      --panel-border:#1E2130;
+      --panel-hover: #161B27;
+      --accent:      #25D366;
+      --accent-dim:  #128C7E;
+      --text:        #E9EDEF;
+      --text-muted:  #8696A0;
+      --danger:      #FF4757;
+      --gold:        #FFD700;
+      --radius:      10px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+    .sidebar {
+      width: 310px;
+      min-width: 310px;
+      height: 100vh;
+      background: var(--panel);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Logo */
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--panel-border);
+      flex-shrink: 0;
+    }
+
+    .logo-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+
+    .logo-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--accent-dim);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: .5px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Scrollable content */
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 0 20px;
+      scrollbar-width: thin;
+      scrollbar-color: #2A3942 transparent;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar       { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: #2A3942; border-radius: 2px; }
+
+    /* Sections */
+    .section {
+      padding: 16px 20px 0;
+    }
+
+    .section + .section { margin-top: 4px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--panel-border);
+    }
+
+    /* Form controls */
+    .ctrl-row {
+      margin-bottom: 12px;
+    }
+
+    .ctrl-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .ctrl-input {
+      width: 100%;
+      background: #161B27;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .ctrl-input:focus { border-color: var(--accent); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      display: flex;
+      background: #161B27;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .theme-btn {
+      flex: 1;
+      padding: 7px 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .theme-btn.active {
+      background: var(--accent-dim);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Range slider */
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ctrl-range {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      background: #2A3942;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .ctrl-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .ctrl-range::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    .range-val {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* Toggle switches */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-name {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #2A3942;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .toggle-track::before {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 3px;
+      top: 3px;
+      background: #8696A0;
+      border-radius: 50%;
+      transition: transform .2s, background .2s;
+    }
+
+    .toggle-switch input:checked + .toggle-track { background: var(--accent-dim); }
+
+    .toggle-switch input:checked + .toggle-track::before {
+      transform: translateX(16px);
+      background: #fff;
+    }
+
+    /* Test message buttons */
+    .test-btn {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel-hover);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+      transition: border-color .15s, background .15s;
+    }
+
+    .test-btn:hover { border-color: var(--accent); background: #161B27; }
+
+    .test-btn:active { transform: scale(.98); }
+
+    .test-btn .btn-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .badge-mod  { background: #34AE1A22; color: #34AE1A; border: 1px solid #34AE1A44; }
+    .badge-sub  { background: #9147FF22; color: #9147FF; border: 1px solid #9147FF44; }
+    .badge-vip  { background: #E91E8C22; color: #E91E8C; border: 1px solid #E91E8C44; }
+    .badge-bc   { background: #E9191622; color: #E91916; border: 1px solid #E9191644; }
+
+    .burst-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px dashed var(--accent-dim);
+      background: transparent;
+      color: var(--accent);
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background .15s;
+      margin-top: 4px;
+    }
+
+    .burst-btn:hover { background: #25D36612; }
+
+    /* URL section */
+    .url-box {
+      background: #161B27;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .url-text {
+      font-size: 11px;
+      color: var(--accent);
+      word-break: break-all;
+      font-family: 'Courier New', monospace;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      width: 100%;
+      padding: 9px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent-dim);
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background .15s;
+    }
+
+    .copy-btn:hover { background: var(--accent); }
+
+    .copy-btn.copied { background: #2A9D5C; }
+
+    .url-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .url-hint strong { color: var(--text); }
+
+    /* =====================================================
+       STREAM PREVIEW
+    ===================================================== */
+    .preview {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* Fake game scene */
+    .stream-scene {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 25% 35%, #1A0A2E 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 65%, #002A1A 0%, transparent 50%),
+        linear-gradient(180deg, #06070F 0%, #0A0E18 40%, #060A0F 100%);
+    }
+
+    /* Stars */
+    .stars {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255,255,255,.7);
+      border-radius: 50%;
+      animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: .8; }
+      50%       { opacity: .15; }
+    }
+
+    /* Grid floor */
+    .grid-floor {
+      position: absolute;
+      bottom: 0;
+      left: -20%;
+      right: -20%;
+      height: 45%;
+      background-image:
+        linear-gradient(rgba(0,168,132,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,168,132,.06) 1px, transparent 1px);
+      background-size: 50px 50px;
+      transform: perspective(600px) rotateX(55deg);
+      transform-origin: bottom center;
+    }
+
+    /* Scan lines */
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,.03) 0px,
+        rgba(0,0,0,.03) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+    }
+
+    /* ── Fake HUD ── */
+    .hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      padding: 18px 22px;
+    }
+
+    .hud-tl { position: absolute; top: 18px; left: 22px; }
+    .hud-tr { position: absolute; top: 18px; right: 22px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .hud-bl { position: absolute; bottom: 22px; left: 22px; }
+    .hud-bc { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); }
+
+    .hud-bar-wrap { display: flex; flex-direction: column; gap: 5px; }
+
+    .hud-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,.7);
+    }
+
+    .bar-track {
+      width: 120px;
+      height: 8px;
+      background: rgba(0,0,0,.5);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+
+    .bar-fill { height: 100%; border-radius: 4px; }
+
+    .bar-hp   { width: 72%; background: linear-gradient(90deg, #FF4757, #FF6B81); }
+    .bar-mp   { width: 55%; background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+    .bar-xp   { width: 88%; background: linear-gradient(90deg, var(--accent), #6BCB77); }
+
+    .hud-score {
+      font-size: 22px;
+      font-weight: 800;
+      color: rgba(255,255,255,.85);
+      text-shadow: 0 0 20px rgba(255,215,0,.3);
+      letter-spacing: 2px;
+    }
+
+    .hud-score span { color: var(--gold); font-size: 13px; margin-right: 4px; }
+
+    .hud-level {
+      font-size: 11px;
+      color: rgba(255,255,255,.5);
+      text-align: right;
+    }
+
+    /* Minimap */
+    .minimap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.2);
+      background: rgba(0,0,0,.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .minimap-bg {
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 60% 40%, rgba(0,200,100,.15) 30%, transparent 60%),
+        radial-gradient(circle at 30% 70%, rgba(30,80,180,.2) 20%, transparent 50%),
+        #0A1A0A;
+    }
+
+    .minimap-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .minimap-enemy {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    /* Ability bar */
+    .ability-bar {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ability {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      border: 2px solid rgba(255,255,255,.15);
+      background: rgba(0,0,0,.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      position: relative;
+    }
+
+    .ability .cd {
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      font-size: 8px;
+      font-weight: 700;
+      color: rgba(255,255,255,.6);
+    }
+
+    .ability.ready { border-color: rgba(255,255,255,.35); }
+
+    /* ── Stream HUD bar (top) ── */
+    .stream-topbar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      z-index: 10;
+    }
+
+    .live-badge {
+      background: #E91916;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .stream-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,.9);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stream-viewers {
+      font-size: 11px;
+      color: rgba(255,255,255,.6);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .viewer-dot { width: 6px; height: 6px; background: var(--danger); border-radius: 50%; }
+
+    .stream-timer {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: rgba(255,255,255,.5);
+      flex-shrink: 0;
+    }
+
+    /* ── Widget iframe ── */
+    .widget-frame-wrap {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 380px;
+      height: 680px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,.7);
+    }
+
+    #widget-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1F2C33;
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 20px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
 <body>
 
-  <div id="widget-container" class="theme-dark">
+<div class="layout">
 
-    <!-- En-tête style WhatsApp -->
-    <div id="wa-header">
-      <button class="wa-icon-btn wa-back-btn" aria-label="Retour">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-      </button>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
 
-      <div class="wa-avatar-wrap">
-        <div class="wa-avatar" id="wa-avatar">
-          <svg viewBox="0 0 212 212" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd"
-              d="M106 0C47.4 0 0 47.4 0 106C0 164.6 47.4 212 106 212C164.6 212 212 164.6 212 106C212 47.4 164.6 0 106 0ZM106 22.4C127.3 22.4 144.8 39.9 144.8 61.2C144.8 82.5 127.3 100 106 100C84.7 100 67.2 82.5 67.2 61.2C67.2 39.9 84.7 22.4 106 22.4ZM106 189.6C79.5 189.6 56 177.3 40.6 158.2C41.2 135.3 87.3 122.8 106 122.8C124.6 122.8 170.8 135.3 171.4 158.2C156 177.3 132.5 189.6 106 189.6Z"
-              fill="#8696A0"/>
-          </svg>
+    <div class="sidebar-logo">
+      <div class="logo-title">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.828L0 24l6.362-1.498A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.893 0-3.658-.53-5.164-1.446l-.372-.22-3.778.89.934-3.653-.24-.376A9.952 9.952 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
         </div>
-        <div class="wa-online-dot"></div>
+        CHATBOX-IA <span class="logo-badge">WA</span>
       </div>
-
-      <div class="wa-contact-info">
-        <div class="wa-contact-name" id="contact-name">Tchat Stream</div>
-        <div class="wa-contact-status">en ligne</div>
-      </div>
-
-      <div class="wa-header-actions">
-        <button class="wa-icon-btn" aria-label="Appel vidéo">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-        </button>
-        <button class="wa-icon-btn" aria-label="Appel">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-        </button>
-        <button class="wa-icon-btn" aria-label="Options">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-        </button>
-      </div>
+      <div class="logo-sub">Prévisualisation du widget StreamElements</div>
     </div>
 
-    <!-- Zone de messages -->
-    <div id="messages-container">
-      <div class="chat-bg-pattern"></div>
-      <div id="messages-list"></div>
-    </div>
+    <div class="sidebar-scroll">
 
-    <!-- Barre de saisie (décorative) -->
-    <div id="wa-input-bar">
-      <button class="wa-icon-btn" aria-label="Emoji">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
-      </button>
-      <div class="wa-input-field">
-        <span>Message…</span>
+      <!-- Configuration -->
+      <div class="section">
+        <div class="section-title">Configuration</div>
+
+        <div class="ctrl-row">
+          <label class="ctrl-label" for="ctrl-name">Nom affiché dans l'en-tête</label>
+          <input class="ctrl-input" id="ctrl-name" type="text" value="Tchat Stream" placeholder="Nom du stream" />
+        </div>
+
+        <div class="ctrl-row">
+          <label class="ctrl-label">Thème</label>
+          <div class="theme-toggle">
+            <button class="theme-btn active" data-theme="dark">🌙 Sombre</button>
+            <button class="theme-btn"        data-theme="light">☀️ Clair</button>
+          </div>
+        </div>
+
+        <div class="ctrl-row">
+          <label class="ctrl-label">Taille du texte</label>
+          <div class="range-wrap">
+            <input class="ctrl-range" id="ctrl-fontsize" type="range" min="11" max="20" value="14" />
+            <span class="range-val" id="val-fontsize">14px</span>
+          </div>
+        </div>
+
+        <div class="ctrl-row">
+          <label class="ctrl-label">Messages maximum</label>
+          <div class="range-wrap">
+            <input class="ctrl-range" id="ctrl-maxmsg" type="range" min="5" max="30" value="15" />
+            <span class="range-val" id="val-maxmsg">15</span>
+          </div>
+        </div>
+
+        <div class="ctrl-row">
+          <label class="ctrl-label">Durée d'affichage (0 = permanent)</label>
+          <div class="range-wrap">
+            <input class="ctrl-range" id="ctrl-duration" type="range" min="0" max="60" step="5" value="0" />
+            <span class="range-val" id="val-duration">∞</span>
+          </div>
+        </div>
       </div>
-      <button class="wa-icon-btn" aria-label="Joindre un fichier">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
-      </button>
-      <button class="wa-mic-btn" aria-label="Microphone">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-      </button>
+
+      <!-- Options -->
+      <div class="section">
+        <div class="section-title">Options</div>
+
+        <div class="toggle-row">
+          <span class="toggle-name">En-tête WhatsApp</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="opt-header" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-name">Barre de saisie</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="opt-inputbar" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-name">Badges (mod, sub, VIP…)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="opt-badges" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-name">Horodatage</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="opt-timestamp" checked />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Messages test -->
+      <div class="section">
+        <div class="section-title">Messages test</div>
+
+        <button class="test-btn" onclick="sendTest('normal')">
+          💬 Message simple
+        </button>
+        <button class="test-btn" onclick="sendTest('mod')">
+          ⚔️ Modérateur
+          <span class="btn-badge badge-mod">MOD</span>
+        </button>
+        <button class="test-btn" onclick="sendTest('sub')">
+          ⭐ Abonné
+          <span class="btn-badge badge-sub">SUB</span>
+        </button>
+        <button class="test-btn" onclick="sendTest('vip')">
+          💎 VIP
+          <span class="btn-badge badge-vip">VIP</span>
+        </button>
+        <button class="test-btn" onclick="sendTest('broadcaster')">
+          👑 Broadcaster
+          <span class="btn-badge badge-bc">BC</span>
+        </button>
+        <button class="test-btn" onclick="sendTest('long')">
+          📝 Message long
+        </button>
+
+        <button class="burst-btn" onclick="sendBurst()">
+          ⚡ Rafale de 5 messages
+        </button>
+      </div>
+
+      <!-- URL StreamElements -->
+      <div class="section">
+        <div class="section-title">URL StreamElements</div>
+
+        <div class="url-box">
+          <div class="url-text" id="widget-url-display">
+            Chargement…
+          </div>
+        </div>
+
+        <button class="copy-btn" id="copy-btn" onclick="copyUrl()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          Copier l'URL
+        </button>
+
+        <p class="url-hint">
+          Dans StreamElements → <strong>Overlay</strong> → <strong>+ Add widget</strong> → <strong>Custom widget</strong> → coller l'URL dans l'onglet <strong>HTML</strong> via <code>iframe</code>, ou utiliser directement l'URL comme source Browser Source dans OBS.
+        </p>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── STREAM PREVIEW ── -->
+  <main class="preview">
+
+    <!-- Scene -->
+    <div class="stream-scene">
+      <div class="stars" id="stars"></div>
+      <div class="grid-floor"></div>
+      <div class="scanlines"></div>
     </div>
 
-  </div>
+    <!-- Fake game HUD -->
+    <div class="hud">
 
-  <script src="script.js"></script>
+      <!-- Top-left: health/mana/xp bars -->
+      <div class="hud-tl">
+        <div class="hud-bar-wrap">
+          <div class="hud-bar">
+            ❤️
+            <div class="bar-track"><div class="bar-fill bar-hp"></div></div>
+            <span>742</span>
+          </div>
+          <div class="hud-bar">
+            💙
+            <div class="bar-track"><div class="bar-fill bar-mp"></div></div>
+            <span>320</span>
+          </div>
+          <div class="hud-bar">
+            ✨
+            <div class="bar-track"><div class="bar-fill bar-xp"></div></div>
+            <span style="font-size:10px;color:#8696A0">Niveau 24</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top-right: score -->
+      <div class="hud-tr">
+        <div class="hud-score"><span>🏆</span>48 320</div>
+        <div class="hud-level">Zone 7 · Boss : 24%</div>
+      </div>
+
+      <!-- Bottom-left: minimap -->
+      <div class="hud-bl">
+        <div class="minimap">
+          <div class="minimap-bg"></div>
+          <div class="minimap-dot"></div>
+          <div class="minimap-enemy" style="top:30%;left:65%"></div>
+          <div class="minimap-enemy" style="top:70%;left:40%"></div>
+          <div class="minimap-enemy" style="top:20%;left:25%"></div>
+        </div>
+      </div>
+
+      <!-- Bottom-center: ability bar -->
+      <div class="hud-bc">
+        <div class="ability-bar">
+          <div class="ability ready">🗡️<span class="cd"></span></div>
+          <div class="ability ready">🛡️<span class="cd"></span></div>
+          <div class="ability">🔥<span class="cd">3s</span></div>
+          <div class="ability ready">⚡<span class="cd"></span></div>
+          <div class="ability">❄️<span class="cd">8s</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Top bar: live badge + title + viewers -->
+    <div class="stream-topbar">
+      <div class="live-badge">LIVE</div>
+      <div class="stream-title" id="topbar-title">Tchat Stream · CHATBOX-IA WA Preview</div>
+      <div class="stream-viewers">
+        <div class="viewer-dot"></div>
+        <span id="viewer-count">1 234</span> viewers
+      </div>
+      <div class="stream-timer" id="stream-timer">00:00:00</div>
+    </div>
+
+    <!-- Widget iframe -->
+    <div class="widget-frame-wrap">
+      <iframe id="widget-frame" src="./widget/" title="WhatsApp Chat Widget"></iframe>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Widget iframe helpers ────────────────────────────
+
+const frame = document.getElementById('widget-frame');
+let widgetReady = false;
+
+frame.addEventListener('load', () => {
+  widgetReady = true;
+  syncAllConfig();
+});
+
+function win() {
+  return widgetReady ? frame.contentWindow : null;
+}
+
+function syncConfig(key, value) {
+  const w = win();
+  if (!w || !w.CONFIG) return;
+  w.CONFIG[key] = value;
+  if (typeof w.applyConfig === 'function') w.applyConfig();
+}
+
+function syncAllConfig() {
+  const w = win();
+  if (!w || !w.CONFIG) return;
+  w.CONFIG.streamName      = document.getElementById('ctrl-name').value;
+  w.CONFIG.theme           = currentTheme;
+  w.CONFIG.fontSize        = parseInt(document.getElementById('ctrl-fontsize').value);
+  w.CONFIG.maxMessages     = parseInt(document.getElementById('ctrl-maxmsg').value);
+  w.CONFIG.messageDuration = parseInt(document.getElementById('ctrl-duration').value);
+  w.CONFIG.showHeader      = document.getElementById('opt-header').checked;
+  w.CONFIG.showInputBar    = document.getElementById('opt-inputbar').checked;
+  w.CONFIG.showBadges      = document.getElementById('opt-badges').checked;
+  w.CONFIG.showTimestamp   = document.getElementById('opt-timestamp').checked;
+  if (typeof w.applyConfig === 'function') w.applyConfig();
+}
+
+// ── Stream name ──────────────────────────────────────
+
+document.getElementById('ctrl-name').addEventListener('input', (e) => {
+  const val = e.target.value || 'Tchat Stream';
+  syncConfig('streamName', val);
+  document.getElementById('topbar-title').textContent = `${val} · CHATBOX-IA WA Preview`;
+});
+
+// ── Theme toggle ─────────────────────────────────────
+
+let currentTheme = 'dark';
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTheme = btn.dataset.theme;
+    syncConfig('theme', currentTheme);
+  });
+});
+
+// ── Range inputs ─────────────────────────────────────
+
+function bindRange(id, valId, cfgKey, fmt) {
+  const input = document.getElementById(id);
+  const label = document.getElementById(valId);
+  input.addEventListener('input', () => {
+    const v = parseInt(input.value);
+    label.textContent = fmt(v);
+    syncConfig(cfgKey, v);
+  });
+}
+
+bindRange('ctrl-fontsize', 'val-fontsize', 'fontSize',        v => `${v}px`);
+bindRange('ctrl-maxmsg',   'val-maxmsg',   'maxMessages',     v => String(v));
+bindRange('ctrl-duration', 'val-duration', 'messageDuration', v => v === 0 ? '∞' : `${v}s`);
+
+// ── Toggle checkboxes ────────────────────────────────
+
+[
+  ['opt-header',    'showHeader'],
+  ['opt-inputbar',  'showInputBar'],
+  ['opt-badges',    'showBadges'],
+  ['opt-timestamp', 'showTimestamp'],
+].forEach(([id, key]) => {
+  document.getElementById(id).addEventListener('change', (e) => {
+    syncConfig(key, e.target.checked);
+  });
+});
+
+// ── Test messages ────────────────────────────────────
+
+const TEST_POOL = {
+  normal: [
+    { displayName: 'CasualViewer',  username: 'casualviewer',  text: 'Le stream est vraiment top ce soir ! 🔥',               badges: [],                        color: null       },
+    { displayName: 'TwitchFan42',   username: 'twitchfan42',   text: 'Est-ce que quelqu\'un a fait ce boss avant ?',           badges: [],                        color: '#4D96FF'  },
+    { displayName: 'RandomUser99',  username: 'randomuser99',  text: 'Bonjour à tous !',                                        badges: [],                        color: null       },
+    { displayName: 'NightWatcher',  username: 'nightwatcher',  text: 'Incroyable la dernière passe !!',                         badges: [],                        color: '#C77DFF'  },
+  ],
+  mod: [
+    { displayName: 'ModPuissant',   username: 'modpuissant',   text: 'Rappel : restez respectueux dans le chat 👍',            badges: [{ type: 'moderator' }],   color: '#34AE1A'  },
+    { displayName: 'ModZero',       username: 'modzero',       text: 'Timeout pour le spam, attention !',                       badges: [{ type: 'moderator' }],   color: '#2ECC71'  },
+  ],
+  sub: [
+    { displayName: 'SubLoyalty',    username: 'subloyalty',    text: 'Mois 6 d\'abonnement ! Jamais déçu 🎉',                  badges: [{ type: 'subscriber' }],  color: '#9147FF'  },
+    { displayName: 'NewSubscriber', username: 'newsubscriber', text: 'Je viens de m\'abonner, super content !',                badges: [{ type: 'subscriber' }],  color: '#7B2FBE'  },
+  ],
+  vip: [
+    { displayName: 'VIP_Legend',    username: 'vip_legend',    text: 'J\'adore ce stream, vous êtes les meilleurs ! 💎',       badges: [{ type: 'vip' }],         color: '#E91E8C'  },
+  ],
+  broadcaster: [
+    { displayName: 'LeStreamer',     username: 'lestreamer',    text: 'Merci à tous pour votre soutien ! ❤️',                   badges: [{ type: 'broadcaster' }], color: '#FFD700'  },
+  ],
+  long: [
+    { displayName: 'LongTalker',    username: 'longtalker',    text: 'Sérieusement ce jeu est absolument incroyable, j\'ai passé les 3 dernières heures dessus et je n\'arrive pas à m\'arrêter ! La map est immense et il y a tellement de secrets à découvrir.',
+      badges: [], color: '#FF9A3C' },
+  ],
+};
+
+function sendTest(type) {
+  const w = win();
+  if (!w || typeof w.addMessage !== 'function') {
+    showToast('Widget pas encore prêt…');
+    return;
+  }
+  const pool = TEST_POOL[type] || TEST_POOL.normal;
+  const msg  = pool[Math.floor(Math.random() * pool.length)];
+  w.addMessage(msg);
+}
+
+function sendBurst() {
+  const all = Object.values(TEST_POOL).flat();
+  const shuffled = [...all].sort(() => Math.random() - .5).slice(0, 5);
+  shuffled.forEach((msg, i) => {
+    setTimeout(() => {
+      const w = win();
+      if (w && typeof w.addMessage === 'function') w.addMessage(msg);
+    }, i * 600);
+  });
+}
+
+// ── Copy URL ─────────────────────────────────────────
+
+function copyUrl() {
+  const url = document.getElementById('widget-url-display').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copié !';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copier l'URL`;
+    }, 2000);
+    showToast('URL copiée dans le presse-papier !');
+  });
+}
+
+// ── Toast ────────────────────────────────────────────
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Widget URL display ───────────────────────────────
+
+function updateWidgetUrl() {
+  const base = window.location.origin + window.location.pathname.replace(/\/?$/, '');
+  const url  = base.endsWith('/') ? base + 'widget/' : base + '/widget/';
+  document.getElementById('widget-url-display').textContent = url;
+}
+
+updateWidgetUrl();
+
+// ── Stream timer ─────────────────────────────────────
+
+const startTime = Date.now();
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+  const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('stream-timer').textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+// ── Viewer count animation ───────────────────────────
+
+let viewers = 1234;
+setInterval(() => {
+  viewers += Math.floor(Math.random() * 7) - 3;
+  viewers = Math.max(800, viewers);
+  document.getElementById('viewer-count').textContent = viewers.toLocaleString('fr-FR');
+}, 5000);
+
+// ── Generate stars ───────────────────────────────────
+
+const starsContainer = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const star = document.createElement('div');
+  star.className = 'star';
+  star.style.cssText = `
+    left: ${Math.random() * 100}%;
+    top:  ${Math.random() * 60}%;
+    --dur:   ${2 + Math.random() * 4}s;
+    --delay: ${Math.random() * -5}s;
+    opacity: ${.3 + Math.random() * .6};
+    width:  ${Math.random() > .85 ? 3 : 2}px;
+    height: ${Math.random() > .85 ? 3 : 2}px;
+  `;
+  starsContainer.appendChild(star);
+}
+</script>
+
 </body>
 </html>
