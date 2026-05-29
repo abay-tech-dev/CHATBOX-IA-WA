@@ -1,0 +1,95 @@
+{
+  "twitchChannel": {
+    "type": "text",
+    "label": "Canal Twitch (connexion directe, laisser vide si StreamElements)",
+    "value": ""
+  },
+  "streamName": {
+    "type": "text",
+    "label": "Nom affiché dans l'en-tête",
+    "value": "Chat Twitch"
+  },
+  "avatarUrl": {
+    "type": "text",
+    "label": "URL de l'avatar (laisser vide = icône par défaut)",
+    "value": ""
+  },
+  "theme": {
+    "type": "dropdown",
+    "label": "Thème visuel",
+    "value": "dark",
+    "options": {
+      "dark":  "Sombre – WhatsApp Dark",
+      "light": "Clair  – WhatsApp Light"
+    }
+  },
+  "fontSize": {
+    "type": "slider",
+    "label": "Taille du texte (px)",
+    "value": 14,
+    "min": 11,
+    "max": 20,
+    "step": 1
+  },
+  "maxMessages": {
+    "type": "slider",
+    "label": "Nombre maximum de messages visibles",
+    "value": 15,
+    "min": 5,
+    "max": 30,
+    "step": 1
+  },
+  "messageDuration": {
+    "type": "slider",
+    "label": "Durée d'affichage en secondes (0 = permanent)",
+    "value": 0,
+    "min": 0,
+    "max": 120,
+    "step": 5
+  },
+  "showHeader": {
+    "type": "checkbox",
+    "label": "Afficher l'en-tête WhatsApp",
+    "value": true
+  },
+  "showInputBar": {
+    "type": "checkbox",
+    "label": "Afficher la barre de saisie (décorative)",
+    "value": true
+  },
+  "showBadges": {
+    "type": "checkbox",
+    "label": "Afficher les badges (mod, sub, VIP…)",
+    "value": true
+  },
+  "showTimestamp": {
+    "type": "checkbox",
+    "label": "Afficher l'heure sur chaque message",
+    "value": true
+  },
+  "subGoalEnabled": {
+    "type": "checkbox",
+    "label": "Activer l'objectif d'abonnements",
+    "value": false
+  },
+  "subGoalLabel": {
+    "type": "text",
+    "label": "Titre de l'objectif",
+    "value": "Objectif abonnements"
+  },
+  "subGoalDesc": {
+    "type": "text",
+    "label": "Description (ex: Facecam à 100 subs !)",
+    "value": ""
+  },
+  "subGoalCurrent": {
+    "type": "number",
+    "label": "Abonnements actuels",
+    "value": 0
+  },
+  "subGoalTarget": {
+    "type": "number",
+    "label": "Objectif cible (nombre de subs)",
+    "value": 100
+  }
+}
