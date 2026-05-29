@@ -816,7 +816,7 @@
 
         <div class="ctrl-row">
           <label class="ctrl-label" for="ctrl-name">Nom affiché dans l'en-tête</label>
-          <input class="ctrl-input" id="ctrl-name" type="text" value="Tchat Stream" placeholder="Nom du stream" />
+          <input class="ctrl-input" id="ctrl-name" type="text" value="Chat Twitch" placeholder="Nom du stream" />
         </div>
 
         <div class="ctrl-row">
@@ -980,8 +980,17 @@
           Copier l'URL
         </button>
 
+        <div style="background:#161B27;border:1px solid #25D36633;border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;flex-shrink:0">📐</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#25D366;margin-bottom:3px;">Taille OBS recommandée</div>
+            <div style="font-size:13px;color:#E9EDEF;font-family:'Courier New',monospace;letter-spacing:.5px;">Largeur : <strong>380</strong> px &nbsp;·&nbsp; Hauteur : <strong>680</strong> px</div>
+          </div>
+        </div>
+
         <p class="url-hint">
-          Dans StreamElements → <strong>Overlay</strong> → <strong>+ Add widget</strong> → <strong>Custom widget</strong> → coller l'URL dans l'onglet <strong>HTML</strong> via <code>iframe</code>, ou utiliser directement l'URL comme source Browser Source dans OBS.
+          <strong>OBS</strong> → + Source → Navigateur → coller l'URL → régler la taille à <strong>380 × 680 px</strong>.<br><br>
+          <strong>StreamElements</strong> → Overlay → + Add widget → Custom widget → coller l'URL → dans les options du widget régler <strong>Width : 380 / Height : 680</strong>.
         </p>
       </div>
 
@@ -1055,7 +1064,7 @@
     <!-- Top bar: live badge + title + viewers -->
     <div class="stream-topbar">
       <div class="live-badge">LIVE</div>
-      <div class="stream-title" id="topbar-title">Tchat Stream · CHATBOX-IA WA Preview</div>
+      <div class="stream-title" id="topbar-title">Chat Twitch · CHATBOX-IA WA Preview</div>
       <div class="stream-viewers">
         <div class="viewer-dot"></div>
         <span id="viewer-count">1 234</span> viewers
@@ -1188,7 +1197,7 @@ function syncAllConfig() {
 // ── Stream name ──────────────────────────────────────
 
 document.getElementById('ctrl-name').addEventListener('input', (e) => {
-  const val = e.target.value || 'Tchat Stream';
+  const val = e.target.value || 'Chat Twitch';
   syncConfig('streamName', val);
   document.getElementById('topbar-title').textContent = `${val} · CHATBOX-IA WA Preview`;
 });
