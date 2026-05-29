@@ -816,7 +816,7 @@
 
         <div class="ctrl-row">
           <label class="ctrl-label" for="ctrl-name">Nom affiché dans l'en-tête</label>
-          <input class="ctrl-input" id="ctrl-name" type="text" value="Tchat Stream" placeholder="Nom du stream" />
+          <input class="ctrl-input" id="ctrl-name" type="text" value="Chat Twitch" placeholder="Nom du stream" />
         </div>
 
         <div class="ctrl-row">
@@ -1064,7 +1064,7 @@
     <!-- Top bar: live badge + title + viewers -->
     <div class="stream-topbar">
       <div class="live-badge">LIVE</div>
-      <div class="stream-title" id="topbar-title">Tchat Stream · CHATBOX-IA WA Preview</div>
+      <div class="stream-title" id="topbar-title">Chat Twitch · CHATBOX-IA WA Preview</div>
       <div class="stream-viewers">
         <div class="viewer-dot"></div>
         <span id="viewer-count">1 234</span> viewers
@@ -1197,7 +1197,7 @@ function syncAllConfig() {
 // ── Stream name ──────────────────────────────────────
 
 document.getElementById('ctrl-name').addEventListener('input', (e) => {
-  const val = e.target.value || 'Tchat Stream';
+  const val = e.target.value || 'Chat Twitch';
   syncConfig('streamName', val);
   document.getElementById('topbar-title').textContent = `${val} · CHATBOX-IA WA Preview`;
 });

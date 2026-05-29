@@ -18,7 +18,7 @@
       </div>
 
       <div class="wa-contact-info">
-        <div class="wa-contact-name" id="contact-name">Tchat Stream</div>
+        <div class="wa-contact-name" id="contact-name">Chat Twitch</div>
         <div class="wa-contact-status">en ligne</div>
       </div>
 

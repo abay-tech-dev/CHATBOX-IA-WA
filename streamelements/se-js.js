@@ -6,7 +6,7 @@ const CONFIG = {
   maxMessages:     15,
   messageDuration: 0,
   theme:           'dark',
-  streamName:      'Tchat Stream',
+  streamName:      'Chat Twitch',
   avatarUrl:       '',
   fontSize:        14,
   showHeader:      true,

@@ -7,7 +7,7 @@
   "streamName": {
     "type": "text",
     "label": "Nom affiché dans l'en-tête",
-    "value": "Tchat Stream"
+    "value": "Chat Twitch"
   },
   "avatarUrl": {
     "type": "text",
